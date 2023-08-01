@@ -84,7 +84,7 @@ test("testing missing url and title attributes for post", async () => {
   const missingURL = {
     title: "test",
     author: "author test"
-}
+  }
   const before = await helper.blogsInDb()
 
   await api
@@ -102,6 +102,37 @@ test("testing missing url and title attributes for post", async () => {
 
   const afterURL = await helper.blogsInDb()
   expect(afterURL).toEqual(before)
-  
-    
+})
+
+test("testing deletion of an element using id", async () => {
+  const before = await helper.blogsInDb()
+  // console.log(before)
+  const promises = before.map(async (blog) => {
+    await api
+      .delete(`/api/blogs/${blog.id}`)
+      .expect(204)
+  })
+  await Promise.all(promises)
+  const after = await helper.blogsInDb()
+  console.log(after, after.length)
+  expect(after.length).toBe(0)
+})
+
+test("testing update of an element using id", async () => {
+  const hardcodedLikes = 1000
+  const before = await helper.blogsInDb()
+  // console.log(before)
+  const promises = before.map(async (blog) => {
+    await api
+      .put(`/api/blogs/${blog.id}`)
+      .send({
+        ...blog,
+        likes: hardcodedLikes
+      })
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+  await Promise.all(promises)
+  const after = await helper.blogsInDb()
+  after.map(blog => expect(blog.likes).toBe(hardcodedLikes))
 })
