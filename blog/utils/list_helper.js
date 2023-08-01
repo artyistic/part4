@@ -19,7 +19,6 @@ const mostBlogs = (blogs) => {
       let currBlogs = map.get(blog.author);
       currBlogs++;
       map.set(blog.author, currBlogs);
-      console.log(`${blog.author} ${currBlogs}`);
       if (currBlogs > maxBlogs) {
         mostBlogs = blog.author;
         maxBlogs = currBlogs;
@@ -44,7 +43,6 @@ const mostLikes = (blogs) => {
       let currLikes = map.get(blog.author);
       currLikes += blog.likes;
       map.set(blog.author, currLikes);
-      console.log(`${blog.author} ${currLikes}`);
       if (currLikes > maxLikes) {
         mostLikes = blog.author;
         maxLikes = currLikes;
