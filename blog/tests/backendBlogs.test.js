@@ -1,17 +1,37 @@
-const mongoose = require("mongoose");
 const testBlogs = require("./testBlogs");
 const supertest = require("supertest");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user")
 const api = supertest(app);
 const helper = require("./backendTestHelper")
-const one = testBlogs.listWithOneBlog.array;
 const more = testBlogs.listWithMoreBlog.array;
+const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
+let rootUserToken
 
 beforeEach(async () => {
   await Blog.deleteMany({});
-  const promises = more.map((blog) => new Blog(blog).save());
+  await User.deleteMany({});
+  const rootUser = {
+    "username": "root",
+    "password": "root_pw",
+    "name": "root",
+    "passwordHash": await bcrypt.hash("root_pw", 10) 
+  }
+  const savedRoot = await (new User(rootUser)).save()
+  const userForToken = {
+    username: rootUser.username,
+    id: rootUser._id,
+  }
+  //rootUserToken = jwt.sign(userForToken, process.env.SECRET)
+  rootUserToken = (await api.post("/api/login").send({username: rootUser.username, password: rootUser.password})).body.token
+  const promises = more.map((blog) => new Blog({
+    ...blog,
+    user: savedRoot.id
+  }).save());
   await Promise.all(promises);
+  
 });
 
 test("testing get route", async () => {
@@ -44,6 +64,7 @@ test("testing post route", async () => {
   await api
     .post("/api/blogs")
     .send(newBlog)
+    .auth(`${rootUserToken}`, {type: "bearer"})
     .expect(201)
     .expect('Content-Type', /application\/json/)
 
@@ -65,6 +86,7 @@ test("testing missing likes attribute for post", async () => {
   await api
     .post("/api/blogs")
     .send(newBlog)
+    .set("Authorization", `Bearer ${rootUserToken}`)
     .expect(201)
     .expect('Content-Type', /application\/json/)
 
@@ -90,6 +112,7 @@ test("testing missing url and title attributes for post", async () => {
   await api
     .post("/api/blogs")
     .send(missingTitle)
+    .set("Authorization", `Bearer ${rootUserToken}`)
     .expect(400)
 
   const afterTitle = await helper.blogsInDb()
@@ -98,6 +121,7 @@ test("testing missing url and title attributes for post", async () => {
     await api
     .post("/api/blogs")
     .send(missingURL)
+    .set("Authorization", `Bearer ${rootUserToken}`)
     .expect(400)
 
   const afterURL = await helper.blogsInDb()
@@ -110,18 +134,17 @@ test("testing deletion of an element using id", async () => {
   const promises = before.map(async (blog) => {
     await api
       .delete(`/api/blogs/${blog.id}`)
+      .set("Authorization", `Bearer ${rootUserToken}`)
       .expect(204)
   })
   await Promise.all(promises)
   const after = await helper.blogsInDb()
-  console.log(after, after.length)
   expect(after.length).toBe(0)
 })
 
 test("testing update of an element using id", async () => {
   const hardcodedLikes = 1000
   const before = await helper.blogsInDb()
-  // console.log(before)
   const promises = before.map(async (blog) => {
     await api
       .put(`/api/blogs/${blog.id}`)

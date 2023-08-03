@@ -1,10 +1,30 @@
-POST http://localhost:3003/api/blogs
+POST http://localhost:3003/api/users
 Content-Type: application/json
 
 
 {
-  "title": "jjk",
-  "author": "gege",
-  "url": "bar.com",
-  "likes": "2000"
+  "username": "dhl",
+  "name": "dennis",
+  "password": "123"
+}
+
+###
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+
+{
+  "username": "test",
+  "name": "test",
+  "password": "456"
+}
+
+###
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRobCIsImlkIjoiNjRjYjE5MWYzOGI3NTNkZWRhYjMzMGI5IiwiaWF0IjoxNjkxMDM0MDAxfQ.v8lrf5bHTO5cODYc6pvcvQO1DwIl0_bJxQ4JvjhXQJ8
+{
+  "title": "onk",
+  "author": "akaMengo",
+  "url": "https://ichigoproduction.com/"
 }
